@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafíos Bombarderos Estratégicos</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .category-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .category-btn {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .category-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .question-container {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .option-btn {
+            padding: 10px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .option-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .correct {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .incorrect {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .next-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .score {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+        
+        .special-challenge {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f39c12;
+            color: white;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .power-ups {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .power-up {
+            padding: 8px 12px;
+            background-color: #8e44ad;
+            color: white;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Desafíos Bombarderos Estratégicos</h1>
+        
+        <div class="category-selector">
+            <button class="category-btn" data-category="pitagoras">Teorema de Pitágoras</button>
+            <button class="category-btn" data-category="angulos">Ángulos</button>
+            <button class="category-btn" data-category="trigonometria">Trigonometría</button>
+            <button class="category-btn" data-category="clasificacion">Clasificación</button>
+            <button class="category-btn" data-category="aleatorio">Aleatorio</button>
+        </div>
+        
+        <div class="question-container" id="question-container">
+            <div class="question" id="question-text"></div>
+            <div class="options" id="options-container"></div>
+            <div class="result" id="result-message"></div>
+            
+            <div class="special-challenge" id="special-challenge">
+                <h3>¡Desafío Especial! (5 aciertos seguidos)</h3>
+                <div id="special-question"></div>
+                <div class="options" id="special-options"></div>
+            </div>
+            
+            <button class="next-btn" id="next-btn">Siguiente Pregunta</button>
+        </div>
+        
+        <div class="score">
+            Aciertos consecutivos: <span id="streak">0</span>
+        </div>
+        
+        <div class="power-ups" id="power-ups">
+            <!-- Aquí se mostrarán las habilidades obtenidas -->
+        </div>
+    </div>
+
+    <script>
+        // Función para generar números aleatorios en un rango controlado
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Función para generar opciones alrededor de una respuesta correcta
+        function generateOptions(correctAnswer, variation) {
+            const options = new Set([correctAnswer]);
+            
+            while(options.size < 4) {
+                const variationValue = getRandomInt(1, variation);
+                const option = getRandomInt(0, 1) === 0 
+                    ? correctAnswer + variationValue 
+                    : correctAnswer - variationValue;
+                
+                if (option > 0) {
+                    options.add(option);
+                }
+            }
+            
+            return Array.from(options).sort(() => Math.random() - 0.5);
+        }
+
+        // Habilidades especiales disponibles (sin Radar Avanzado)
+        const specialAbilities = {
+            caza: {
+                name: "Caza de Apoyo",
+                description: "Puedes mover 2 bombarderos en un mismo turno",
+                difficulty: "media"
+            },
+            antiaereo: {
+                name: "Sistema Antiaéreo",
+                description: "Protege un bombardero de un ataque durante 2 turnos",
+                difficulty: "alta"
+            },
+            uav: {
+                name: "UAV de Reconocimiento",
+                description: "Aumenta tu alcance de ataque a 2 casillas de distancia",
+                difficulty: "media"
+            }
+        };
+
+        // Generador de preguntas dinámicas
+        const questionGenerators = {
+            pitagoras: () => {
+                const a = getRandomInt(3, 8);
+                const b = getRandomInt(3, 8);
+                const c = Math.round(Math.sqrt(a*a + b*b) * 10) / 10;
+                
+                return {
+                    question: `En un triángulo rectángulo, si los catetos miden ${a} y ${b}, ¿cuánto mide la hipotenusa?`,
+                    options: generateOptions(Math.round(c), 2),
+                    answer: Math.round(c),
+                    category: "pitagoras"
+                };
+            },
+            
+            angulos: () => {
+                const angle1 = getRandomInt(30, 70);
+                const angle2 = getRandomInt(30, 70);
+                const angle3 = 180 - angle1 - angle2;
+                
+                return {
+                    question: `En un triángulo, si dos ángulos miden ${angle1}° y ${angle2}°, ¿cuánto mide el tercer ángulo?`,
+                    options: generateOptions(angle3, 10),
+                    answer: angle3,
+                    category: "angulos"
+                };
+            },
+            
+            trigonometria: () => {
+                const angles = [30, 45, 60];
+                const angle = angles[getRandomInt(0, 2)];
+                let answer, question;
+                
+                switch(getRandomInt(0, 2)) {
+                    case 0: // Seno
+                        answer = Math.round(Math.sin(angle * Math.PI / 180) * 100) / 100;
+                        question = `¿Cuál es el seno de ${angle}°?`;
+                        break;
+                    case 1: // Coseno
+                        answer = Math.round(Math.cos(angle * Math.PI / 180) * 100) / 100;
+                        question = `¿Cuál es el coseno de ${angle}°?`;
+                        break;
+                    case 2: // Tangente
+                        answer = Math.round(Math.tan(angle * Math.PI / 180) * 100) / 100;
+                        question = `¿Cuál es la tangente de ${angle}°?`;
+                        break;
+                }
+                
+                return {
+                    question: question,
+                    options: generateOptions(answer * 100, 20).map(n => (n / 100).toFixed(2)),
+                    answer: answer.toFixed(2),
+                    category: "trigonometria"
+                };
+            },
+            
+            clasificacion: () => {
+                const types = [
+                    { name: "Equilátero", sides: [5, 5, 5] },
+                    { name: "Isósceles", sides: [4, 4, 6] },
+                    { name: "Escaleno", sides: [3, 4, 5] },
+                    { name: "Rectángulo", sides: [3, 4, 5] }
+                ];
+                
+                const type = types[getRandomInt(0, 3)];
+                
+                return {
+                    question: `Un triángulo con lados ${type.sides.join(", ")} es:`,
+                    options: ["Equilátero", "Isósceles", "Escaleno", "Rectángulo"],
+                    answer: type.name,
+                    category: "clasificacion"
+                };
+            },
+            
+            especial: () => {
+                const specialQuestions = [
+                    {
+                        question: "En un triángulo rectángulo, la hipotenusa mide 13 y un cateto 5. ¿Cuánto mide el otro cateto?",
+                        options: ["8", "10", "12", "15"],
+                        answer: "12",
+                        ability: Object.keys(specialAbilities)[getRandomInt(0, Object.keys(specialAbilities).length - 1)]
+                    },
+                    {
+                        question: "¿Cuál es el seno de 150°? (Usa ángulos notables)",
+                        options: ["0.5", "-0.5", "0.87", "-0.87"],
+                        answer: "0.5",
+                        ability: Object.keys(specialAbilities)[getRandomInt(0, Object.keys(specialAbilities).length - 1)]
+                    },
+                    {
+                        question: "Un triángulo tiene ángulos de 30°, 60° y 90°. Si el lado opuesto a 30° mide 4, ¿cuánto mide la hipotenusa?",
+                        options: ["4", "6", "8", "12"],
+                        answer: "8",
+                        ability: Object.keys(specialAbilities)[getRandomInt(0, Object.keys(specialAbilities).length - 1)]
+                    }
+                ];
+                
+                return specialQuestions[getRandomInt(0, specialQuestions.length - 1)];
+            }
+        };
+
+        // Variables del juego
+        let currentCategory = '';
+        let currentQuestion = {};
+        let streak = 0;
+        let earnedAbilities = [];
+        
+        // Elementos del DOM
+        const categoryButtons = document.querySelectorAll('.category-btn');
+        const questionContainer = document.getElementById('question-container');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const resultMessage = document.getElementById('result-message');
+        const nextButton = document.getElementById('next-btn');
+        const streakDisplay = document.getElementById('streak');
+        const specialChallenge = document.getElementById('special-challenge');
+        const specialQuestion = document.getElementById('special-question');
+        const specialOptions = document.getElementById('special-options');
+        const powerUpsContainer = document.getElementById('power-ups');
+        
+        // Event listeners
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                currentCategory = button.dataset.category;
+                loadQuestion();
+                questionContainer.style.display = 'block';
+            });
+        });
+        
+        nextButton.addEventListener('click', loadQuestion);
+        
+        // Función para cargar una pregunta
+        function loadQuestion() {
+            // Resetear completamente la interfaz
+            resultMessage.style.display = 'none';
+            nextButton.style.display = 'none';
+            specialChallenge.style.display = 'none';
+            questionText.style.display = 'block';
+            optionsContainer.style.display = 'grid';
+            
+            // Verificar si debemos mostrar un desafío especial
+            if (streak >= 5 && streak % 5 === 0) {
+                showSpecialChallenge();
+                return;
+            }
+            
+            // Determinar la categoría actual
+            const effectiveCategory = currentCategory === 'aleatorio' 
+                ? Object.keys(questionGenerators).filter(c => c !== 'especial')[getRandomInt(0, 3)]
+                : currentCategory;
+            
+            // Generar pregunta
+            currentQuestion = questionGenerators[effectiveCategory]();
+            
+            // Mostrar la pregunta normal
+            showNormalQuestion();
+        }
+        
+        function showNormalQuestion() {
+            questionText.textContent = currentQuestion.question;
+            
+            // Mostrar opciones
+            optionsContainer.innerHTML = '';
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.addEventListener('click', () => checkAnswer(option, false));
+                optionsContainer.appendChild(button);
+            });
+        }
+        
+        function showSpecialChallenge() {
+            currentQuestion = questionGenerators.especial();
+            
+            // Ocultar pregunta normal
+            questionText.style.display = 'none';
+            optionsContainer.style.display = 'none';
+            
+            // Mostrar desafío especial
+            specialChallenge.style.display = 'block';
+            specialQuestion.textContent = currentQuestion.question;
+            
+            specialOptions.innerHTML = '';
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.addEventListener('click', () => checkAnswer(option, true));
+                specialOptions.appendChild(button);
+            });
+        }
+        
+        // Función para verificar la respuesta
+        function checkAnswer(selectedOption, isSpecial) {
+            // Deshabilitar los botones de opción
+            const optionButtons = isSpecial 
+                ? document.querySelectorAll('#special-options .option-btn')
+                : document.querySelectorAll('#options-container .option-btn');
+                
+            optionButtons.forEach(button => {
+                button.disabled = true;
+            });
+            
+            // Mostrar resultado
+            resultMessage.style.display = 'block';
+            
+            if (selectedOption == currentQuestion.answer) {
+                resultMessage.textContent = '¡Correcto!';
+                resultMessage.className = 'result correct';
+                streak++;
+                
+                if (isSpecial) {
+                    const abilityKey = currentQuestion.ability;
+                    const ability = specialAbilities[abilityKey];
+                    earnedAbilities.push(ability);
+                    
+                    resultMessage.textContent += ` ¡Has ganado ${ability.name}! (${ability.description})`;
+                    updatePowerUpsDisplay();
+                }
+            } else {
+                resultMessage.textContent = `Incorrecto. La respuesta correcta es: ${currentQuestion.answer}`;
+                resultMessage.className = 'result incorrect';
+                streak = 0;
+            }
+            
+            streakDisplay.textContent = streak;
+            nextButton.style.display = 'block';
+        }
+        
+        function updatePowerUpsDisplay() {
+            powerUpsContainer.innerHTML = '';
+            
+            earnedAbilities.forEach(ability => {
+                const powerUp = document.createElement('div');
+                powerUp.className = 'power-up';
+                powerUp.textContent = `${ability.name}: ${ability.description}`;
+                powerUpsContainer.appendChild(powerUp);
+            });
+        }
+        
+        // Inicializar
+        streakDisplay.textContent = '0';
+    </script>
+</body>
+</html>
