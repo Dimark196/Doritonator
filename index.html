@@ -547,4 +547,18 @@
         }
         
         // Inicializar
+
+        streakDisplay.textContent = '0';
         
+        // Cargar último resultado del dado si existe
+        if (localStorage.getItem('lastDiceRoll')) {
+            lastDiceRoll = parseInt(localStorage.getItem('lastDiceRoll'));
+            diceElement.textContent = lastDiceRoll;
+            diceRollResult.textContent = `Resultado: ${lastDiceRoll}`;
+            diceRollResult.style.display = 'block';
+        } else {
+            diceElement.textContent = '?';
+        }
+    </script>
+</body>
+</html>
