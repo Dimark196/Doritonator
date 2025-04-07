@@ -144,11 +144,61 @@
             border-radius: 5px;
             font-size: 0.9em;
         }
+        
+        /* Estilos para el dado */
+        .dice-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .dice {
+            width: 80px;
+            height: 80px;
+            background-color: white;
+            border-radius: 10px;
+            border: 2px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .roll-btn {
+            padding: 10px 20px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .roll-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .dice-roll-result {
+            font-weight: bold;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Desafíos Bombarderos Estratégicos</h1>
+        
+        <!-- Sección del dado digital -->
+        <div class="dice-container">
+            <div class="dice" id="dice">?</div>
+            <button class="roll-btn" id="roll-btn">Lanzar Dado</button>
+            <div class="dice-roll-result" id="dice-roll-result"></div>
+        </div>
         
         <div class="category-selector">
             <button class="category-btn" data-category="pitagoras">Teorema de Pitágoras</button>
@@ -205,7 +255,7 @@
             return Array.from(options).sort(() => Math.random() - 0.5);
         }
 
-        // Habilidades especiales disponibles (sin Radar Avanzado)
+        // Habilidades especiales disponibles
         const specialAbilities = {
             caza: {
                 name: "Caza de Apoyo",
@@ -329,6 +379,7 @@
         let currentQuestion = {};
         let streak = 0;
         let earnedAbilities = [];
+        let lastDiceRoll = 0;
         
         // Elementos del DOM
         const categoryButtons = document.querySelectorAll('.category-btn');
@@ -342,6 +393,9 @@
         const specialQuestion = document.getElementById('special-question');
         const specialOptions = document.getElementById('special-options');
         const powerUpsContainer = document.getElementById('power-ups');
+        const diceElement = document.getElementById('dice');
+        const rollButton = document.getElementById('roll-btn');
+        const diceRollResult = document.getElementById('dice-roll-result');
         
         // Event listeners
         categoryButtons.forEach(button => {
@@ -353,6 +407,34 @@
         });
         
         nextButton.addEventListener('click', loadQuestion);
+        
+        // Event listener para el dado
+        rollButton.addEventListener('click', rollDice);
+        
+        // Función para lanzar el dado
+        function rollDice() {
+            // Deshabilitar el botón temporalmente
+            rollButton.disabled = true;
+            
+            // Animación del dado
+            let rolls = 0;
+            const animationInterval = setInterval(() => {
+                diceElement.textContent = getRandomInt(1, 6);
+                rolls++;
+                
+                if (rolls > 10) {
+                    clearInterval(animationInterval);
+                    lastDiceRoll = getRandomInt(1, 6);
+                    diceElement.textContent = lastDiceRoll;
+                    diceRollResult.textContent = `Resultado: ${lastDiceRoll}`;
+                    diceRollResult.style.display = 'block';
+                    rollButton.disabled = false;
+                    
+                    // Guardar el resultado en el almacenamiento local
+                    localStorage.setItem('lastDiceRoll', lastDiceRoll);
+                }
+            }, 100);
+        }
         
         // Función para cargar una pregunta
         function loadQuestion() {
@@ -466,6 +548,16 @@
         
         // Inicializar
         streakDisplay.textContent = '0';
+        
+        // Cargar último resultado del dado si existe
+        if (localStorage.getItem('lastDiceRoll')) {
+            lastDiceRoll = parseInt(localStorage.getItem('lastDiceRoll'));
+            diceElement.textContent = lastDiceRoll;
+            diceRollResult.textContent = `Resultado: ${lastDiceRoll}`;
+            diceRollResult.style.display = 'block';
+        } else {
+            diceElement.textContent = '?';
+        }
     </script>
 </body>
 </html>
