@@ -206,6 +206,7 @@
             <button class="category-btn" data-category="angulos">Ángulos</button>
             <button class="category-btn" data-category="trigonometria">Trigonometría</button>
             <button class="category-btn" data-category="clasificacion">Clasificación</button>
+            <button class="category-btn" data-category="aplicaciones">Aplicaciones</button> <!-- Nueva categoría añadida -->
             <button class="category-btn" data-category="aleatorio">Aleatorio</button>
         </div>
         
@@ -417,48 +418,7 @@
                 };
             },
             
-            aplicaciones: () => {
-                const problems = [
-                    () => {
-                        const altura = getRandomInt(10, 50);
-                        const distancia = getRandomInt(10, 50);
-                        const angulo = Math.atan(altura/distancia) * 180/Math.PI;
-                        return {
-                            question: `Un avión vuela a una altura de ${altura} km. Si un observador en tierra está a ${distancia} km del punto directamente debajo del avión, ¿cuál es el ángulo de elevación?`,
-                            options: generateOptions(Math.round(angulo), 5),
-                            answer: Math.round(angulo).toString(),
-                            category: "aplicaciones"
-                        };
-                    },
-                    () => {
-                        const angulo = getRandomInt(30, 60);
-                        const distancia = getRandomInt(50, 150);
-                        const altura = Math.round(distancia * Math.tan(angulo * Math.PI / 180));
-                        return {
-                            question: `Un bombardero ve un objetivo con un ángulo de depresión de ${angulo}°. Si el avión está a ${distancia} metros horizontalmente del objetivo, ¿a qué altura vuela?`,
-                            options: generateOptions(altura, 10),
-                            answer: altura.toString(),
-                            category: "aplicaciones"
-                        };
-                    },
-                    () => {
-                        const lado1 = getRandomInt(5, 15);
-                        const lado2 = getRandomInt(5, 15);
-                        const angulo = getRandomInt(30, 120);
-                        return {
-                            question: `Un terreno triangular tiene dos lados de ${lado1}m y ${lado2}m que forman un ángulo de ${angulo}°. ¿Cuánto mide el tercer lado?`,
-                            options: generateOptions(
-                                Math.round(Math.sqrt(lado1*lado1 + lado2*lado2 - 2*lado1*lado2*Math.cos(angulo * Math.PI / 180))),
-                                5
-                            ),
-                            answer: Math.round(Math.sqrt(lado1*lado1 + lado2*lado2 - 2*lado1*lado2*Math.cos(angulo * Math.PI / 180))).toString(),
-                            category: "aplicaciones"
-                        };
-                    }
-                ];
-                
-                return problems[getRandomInt(0, problems.length - 1)]();
-            },
+            
             
             especial: () => {
                 const specialQuestions = [
@@ -566,7 +526,7 @@
             
             // Determinar la categoría actual
             const effectiveCategory = currentCategory === 'aleatorio' 
-                ? Object.keys(questionGenerators).filter(c => c !== 'especial')[getRandomInt(0, 3)]
+                ? Object.keys(questionGenerators).filter(c => c !== 'especial')[getRandomInt(0, 4)] // Cambiado a 4 para incluir aplicaciones
                 : currentCategory;
             
             // Generar pregunta
