@@ -267,6 +267,190 @@
         };
 
         // [Resto del código JavaScript se mantiene igual]
+                // Variables del juego
+        let currentCategory = '';
+        let currentQuestion = {};
+        let streak = 0;
+        let earnedAbilities = [];
+        let lastDiceRoll = 0;
+        
+        // Elementos del DOM
+        const categoryButtons = document.querySelectorAll('.category-btn');
+        const questionContainer = document.getElementById('question-container');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const resultMessage = document.getElementById('result-message');
+        const nextButton = document.getElementById('next-btn');
+        const streakDisplay = document.getElementById('streak');
+        const specialChallenge = document.getElementById('special-challenge');
+        const specialQuestion = document.getElementById('special-question');
+        const specialOptions = document.getElementById('special-options');
+        const powerUpsContainer = document.getElementById('power-ups');
+        const diceElement = document.getElementById('dice');
+        const rollButton = document.getElementById('roll-btn');
+        const diceRollResult = document.getElementById('dice-roll-result');
+        
+        // Event listeners
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                currentCategory = button.dataset.category;
+                loadQuestion();
+                questionContainer.style.display = 'block';
+            });
+        });
+        
+        nextButton.addEventListener('click', loadQuestion);
+        
+        // Event listener para el dado
+        rollButton.addEventListener('click', rollDice);
+        
+        // Función para lanzar el dado
+        function rollDice() {
+            // Deshabilitar el botón temporalmente
+            rollButton.disabled = true;
+            
+            // Animación del dado
+            let rolls = 0;
+            const animationInterval = setInterval(() => {
+                diceElement.textContent = getRandomInt(1, 6);
+                rolls++;
+                
+                if (rolls > 10) {
+                    clearInterval(animationInterval);
+                    lastDiceRoll = getRandomInt(1, 6);
+                    diceElement.textContent = lastDiceRoll;
+                    diceRollResult.textContent = `Resultado: ${lastDiceRoll}`;
+                    diceRollResult.style.display = 'block';
+                    rollButton.disabled = false;
+                    
+                    // Guardar el resultado en el almacenamiento local
+                    localStorage.setItem('lastDiceRoll', lastDiceRoll);
+                }
+            }, 100);
+        }
+        
+        // Función para cargar una pregunta
+        function loadQuestion() {
+            // Resetear completamente la interfaz
+            resultMessage.style.display = 'none';
+            nextButton.style.display = 'none';
+            specialChallenge.style.display = 'none';
+            questionText.style.display = 'block';
+            optionsContainer.style.display = 'grid';
+            
+            // Verificar si debemos mostrar un desafío especial
+            if (streak >= 5 && streak % 5 === 0) {
+                showSpecialChallenge();
+                return;
+            }
+            
+            // Determinar la categoría actual
+            const effectiveCategory = currentCategory === 'aleatorio' 
+                ? Object.keys(questionGenerators).filter(c => c !== 'especial')[getRandomInt(0, 3)]
+                : currentCategory;
+            
+            // Generar pregunta
+            currentQuestion = questionGenerators[effectiveCategory]();
+            
+            // Mostrar la pregunta normal
+            showNormalQuestion();
+        }
+        
+        function showNormalQuestion() {
+            questionText.textContent = currentQuestion.question;
+            
+            // Mostrar opciones
+            optionsContainer.innerHTML = '';
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.addEventListener('click', () => checkAnswer(option, false));
+                optionsContainer.appendChild(button);
+            });
+        }
+        
+        function showSpecialChallenge() {
+            currentQuestion = questionGenerators.especial();
+            
+            // Ocultar pregunta normal
+            questionText.style.display = 'none';
+            optionsContainer.style.display = 'none';
+            
+            // Mostrar desafío especial
+            specialChallenge.style.display = 'block';
+            specialQuestion.textContent = currentQuestion.question;
+            
+            specialOptions.innerHTML = '';
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.addEventListener('click', () => checkAnswer(option, true));
+                specialOptions.appendChild(button);
+            });
+        }
+        
+        // Función para verificar la respuesta
+        function checkAnswer(selectedOption, isSpecial) {
+            // Deshabilitar los botones de opción
+            const optionButtons = isSpecial 
+                ? document.querySelectorAll('#special-options .option-btn')
+                : document.querySelectorAll('#options-container .option-btn');
+                
+            optionButtons.forEach(button => {
+                button.disabled = true;
+            });
+            
+            // Mostrar resultado
+            resultMessage.style.display = 'block';
+            
+            if (selectedOption == currentQuestion.answer) {
+                resultMessage.textContent = '¡Correcto!';
+                resultMessage.className = 'result correct';
+                streak++;
+                
+                if (isSpecial) {
+                    const abilityKey = currentQuestion.ability;
+                    const ability = specialAbilities[abilityKey];
+                    earnedAbilities.push(ability);
+                    
+                    resultMessage.textContent += ` ¡Has ganado ${ability.name}! (${ability.description})`;
+                    updatePowerUpsDisplay();
+                }
+            } else {
+                resultMessage.textContent = `Incorrecto. La respuesta correcta es: ${currentQuestion.answer}`;
+                resultMessage.className = 'result incorrect';
+                streak = 0;
+            }
+            
+            streakDisplay.textContent = streak;
+            nextButton.style.display = 'block';
+        }
+        
+        function updatePowerUpsDisplay() {
+            powerUpsContainer.innerHTML = '';
+            
+            earnedAbilities.forEach(ability => {
+                const powerUp = document.createElement('div');
+                powerUp.className = 'power-up';
+                powerUp.textContent = `${ability.name}: ${ability.description}`;
+                powerUpsContainer.appendChild(powerUp);
+            });
+        }
+        
+        // Inicializar
+        streakDisplay.textContent = '0';
+        
+        // Cargar último resultado del dado si existe
+        if (localStorage.getItem('lastDiceRoll')) {
+            lastDiceRoll = parseInt(localStorage.getItem('lastDiceRoll'));
+            diceElement.textContent = lastDiceRoll;
+            diceRollResult.textContent = `Resultado: ${lastDiceRoll}`;
+            diceRollResult.style.display = 'block';
+        } else {
+            diceElement.textContent = '?';
+        }
     </script>
 </body>
 </html>
