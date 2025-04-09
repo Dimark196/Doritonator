@@ -237,505 +237,350 @@
     </div>
 
     <script>
-      // Función para generar números aleatorios
-      function getRandomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-      }
-
-      // Función para generar decimales aleatorios
-      function getRandomDecimal(min, max, decimals) {
-        const factor = Math.pow(10, decimals);
-        return (
-          Math.round((Math.random() * (max - min) + min) * factor) / factor
-        );
-      }
-
-      // Función mejorada para generar opciones de respuesta
-      function generateOptions(correctAnswer, variation, isDecimal = false) {
-        // Convertir a número si es string
-        const correctNum =
-          typeof correctAnswer === "string"
-            ? isDecimal
-              ? parseFloat(correctAnswer)
-              : parseInt(correctAnswer)
-            : correctAnswer;
-
-        const options = new Set([
-          isDecimal ? correctNum.toFixed(2) : correctNum.toString(),
-        ]);
-
-        while (options.size < 4) {
-          const variationValue = getRandomInt(1, variation);
-          const optionType = getRandomInt(0, 1);
-          let option;
-
-          if (isDecimal) {
-            const decimalVariation = getRandomDecimal(0.1, 0.5, 1);
-            option =
-              optionType === 0
-                ? correctNum + decimalVariation
-                : correctNum - decimalVariation;
-            option = Math.max(0.1, Math.round(option * 100) / 100); // Evitar valores negativos
-          } else {
-            option =
-              optionType === 0
-                ? correctNum + variationValue
-                : correctNum - variationValue;
-            option = Math.max(1, option); // Evitar valores cero o negativos
-          }
-
-          options.add(isDecimal ? option.toFixed(2) : option.toString());
+            // Función para generar números aleatorios
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
-        return Array.from(options).sort(() => Math.random() - 0.5);
-      }
+        // Función mejorada para generar decimales aleatorios
+        function getRandomDecimal(min, max, decimals) {
+            const factor = Math.pow(10, decimals);
+            return Math.round((Math.random() * (max - min) + min) * factor) / factor;
+        }
 
-      // Habilidades especiales
-      const specialAbilities = {
-        caza: {
-          name: "Caza de Apoyo",
-          description: "Puedes mover 2 bombarderos en un mismo turno",
-        },
-        antiaereo: {
-          name: "Sistema Antiaéreo",
-          description: "Protege un bombardero de un ataque durante 2 turnos",
-        },
-        uav: {
-          name: "UAV de Reconocimiento",
-          description: "Aumenta tu alcance de ataque a 2 casillas de distancia",
-        },
-      };
-
-      // Banco de preguntas mejorado
-      const questionGenerators = {
-        pitagoras: () => {
-          const a = getRandomInt(3, 12);
-          const b = getRandomInt(3, 12);
-          const c = Math.sqrt(a * a + b * b);
-          const isDecimal = c % 1 !== 0;
-          const answer = isDecimal ? c.toFixed(2) : Math.round(c).toString();
-
-          // Validación adicional para evitar NaN
-          if (isNaN(c)) return questionGenerators.pitagoras();
-
-          return {
-            question: `En un triángulo rectángulo, si los catetos miden ${a} y ${b}, ¿cuánto mide la hipotenusa?`,
-            options: generateOptions(answer, isDecimal ? 3 : 2, isDecimal),
-            answer: answer,
-            category: "pitagoras",
-          };
-        },
-
-        angulos: () => {
-          const angleTypes = [
-            { name: "agudo", min: 30, max: 60 }, // Ángulos más razonables
-            { name: "recto", value: 90 },
-            { name: "obtuso", min: 100, max: 140 },
-          ];
-
-          const type = angleTypes[getRandomInt(0, 2)];
-          let angle1, angle2, angle3;
-
-          if (type.name === "recto") {
-            angle1 = getRandomInt(30, 60);
-            angle2 = 90;
-            angle3 = 90 - angle1;
-          } else {
-            angle1 =
-              type.name === "agudo"
-                ? getRandomInt(30, 60)
-                : getRandomInt(100, 140);
-            angle2 = getRandomInt(30, 60);
-            angle3 = 180 - angle1 - angle2;
-
-            // Validar que el tercer ángulo sea válido
-            if (angle3 <= 0) {
-              angle2 = getRandomInt(30, 60);
-              angle3 = 180 - angle1 - angle2;
+        // Función mejorada para generar opciones de respuesta
+        function generateOptions(correctAnswer, variation, isDecimal = false) {
+            // Convertir a número si es string
+            const correctNum = typeof correctAnswer === 'string' ? 
+                (isDecimal ? parseFloat(correctAnswer) : parseInt(correctAnswer)) : 
+                correctAnswer;
+            
+            const options = new Set([isDecimal ? correctNum.toFixed(2) : correctNum.toString()]);
+            
+            while(options.size < 4) {
+                let option;
+                if (isDecimal) {
+                    const decimalVariation = getRandomDecimal(0.1, 1.5, 1);
+                    const optionType = getRandomInt(0, 1);
+                    option = optionType === 0 
+                        ? correctNum + decimalVariation
+                        : correctNum - decimalVariation;
+                    option = Math.max(0.1, Math.round(option * 100) / 100); // Evitar valores negativos
+                } else {
+                    const variationValue = getRandomInt(1, variation);
+                    const optionType = getRandomInt(0, 1);
+                    option = optionType === 0 
+                        ? correctNum + variationValue 
+                        : correctNum - variationValue;
+                    option = Math.max(1, option); // Evitar valores cero o negativos
+                }
+                
+                // Asegurar que no sea igual a la respuesta correcta
+                if (isDecimal ? option.toFixed(2) !== correctNum.toFixed(2) : option !== correctNum) {
+                    options.add(isDecimal ? option.toFixed(2) : option.toString());
+                }
             }
-          }
-
-          const angles = [angle1, angle2, angle3];
-          const missingAngle = angles[getRandomInt(0, 2)];
-
-          return {
-            question: `En un triángulo con ángulos de ${angle1}° y ${angle2}°, ¿cuánto mide el tercer ángulo?`,
-            options: generateOptions(missingAngle, 10),
-            answer: missingAngle.toString(),
-            category: "angulos",
-          };
-        },
-
-        trigonometria: () => {
-          const angles = [30, 45, 60]; // Mantener ángulos notables para simplificar
-          const angle = angles[getRandomInt(0, 2)];
-          const func = ["seno", "coseno", "tangente"][getRandomInt(0, 2)];
-          let answer, question;
-
-          switch (func) {
-            case "seno":
-              answer = Math.sin((angle * Math.PI) / 180);
-              question = `¿Cuál es el seno de ${angle}°?`;
-              break;
-            case "coseno":
-              answer = Math.cos((angle * Math.PI) / 180);
-              question = `¿Cuál es el coseno de ${angle}°?`;
-              break;
-            case "tangente":
-              answer = Math.tan((angle * Math.PI) / 180);
-              question = `¿Cuál es la tangente de ${angle}°?`;
-              break;
-          }
-
-          answer = Math.round(answer * 100) / 100;
-
-          return {
-            question: question,
-            options: generateOptions(answer, 2, true),
-            answer: answer.toFixed(2),
-            category: "trigonometria",
-          };
-        },
-
-        clasificacion: () => {
-          const types = [
-            {
-              name: "Equilátero",
-              sides: () => {
-                const side = getRandomInt(3, 8);
-                return [side, side, side];
-              },
-            },
-            {
-              name: "Isósceles",
-              sides: () => {
-                const equalSide = getRandomInt(3, 8);
-                return [equalSide, equalSide, equalSide + getRandomInt(1, 3)];
-              },
-            },
-            {
-              name: "Escaleno",
-              sides: () => {
-                let a, b, c;
-                do {
-                  a = getRandomInt(3, 8);
-                  b = getRandomInt(3, 8);
-                  c = getRandomInt(3, 8);
-                } while (
-                  a === b ||
-                  a === c ||
-                  b === c ||
-                  a + b <= c ||
-                  a + c <= b ||
-                  b + c <= a
-                );
-                return [a, b, c];
-              },
-            },
-            {
-              name: "Rectángulo",
-              sides: () => {
-                const a = getRandomInt(3, 6);
-                const b = getRandomInt(3, 6);
-                return [a, b, Math.round(Math.sqrt(a * a + b * b))];
-              },
-            },
-          ];
-
-          const type = types[getRandomInt(0, 3)];
-          const sides = type.sides();
-
-          return {
-            question: `Un triángulo con lados ${sides.join(", ")} es:`,
-            options: types.map((t) => t.name),
-            answer: type.name,
-            category: "clasificacion",
-          };
-        },
-
-        aplicaciones: () => {
-          const problems = [
-            () => {
-              const altura = getRandomInt(10, 30);
-              const distancia = getRandomInt(10, 30);
-              const angulo = Math.round(
-                (Math.atan(altura / distancia) * 180) / Math.PI
-              );
-
-              return {
-                question: `Un avión vuela a ${altura} km de altura. Un observador está a ${distancia} km del punto bajo el avión. ¿Ángulo de elevación?`,
-                options: generateOptions(angulo, 5),
-                answer: angulo.toString(),
-                category: "aplicaciones",
-              };
-            },
-            () => {
-              const angulo = getRandomInt(30, 60);
-              const distancia = getRandomInt(50, 100);
-              const altura = Math.round(
-                distancia * Math.tan((angulo * Math.PI) / 180)
-              );
-
-              return {
-                question: `Un bombardero ve un objetivo con ángulo de depresión de ${angulo}° a ${distancia}m de distancia horizontal. ¿Altura?`,
-                options: generateOptions(altura, 10),
-                answer: altura.toString(),
-                category: "aplicaciones",
-              };
-            },
-          ];
-
-          return problems[getRandomInt(0, problems.length - 1)]();
-        },
-
-        especial: () => {
-          const specialQuestions = [
-            {
-              question:
-                "Un avión vuela a 1000m con ángulo de depresión de 30° a un objetivo. ¿Distancia horizontal? (√3 ≈ 1.732)",
-              options: ["1732 m", "1000 m", "1500 m", "2000 m"],
-              answer: "1732 m",
-              ability: "uav",
-            },
-            {
-              question:
-                "Triángulo ABC: ángulo A=45°, lado b=8, lado c=6. ¿Lado a? (√2 ≈ 1.414)",
-              options: ["5.32", "6.24", "7.15", "8.92"],
-              answer: "5.32",
-              ability: "antiaereo",
-            },
-          ];
-
-          return specialQuestions[getRandomInt(0, specialQuestions.length - 1)];
-        },
-      };
-
-      // Variables del juego
-      let currentCategory = "";
-      let currentQuestion = {};
-      let streak = 0;
-      let earnedAbilities = [];
-      let lastDiceRoll = 0;
-
-      // Elementos del DOM
-      const categoryButtons = document.querySelectorAll(".category-btn");
-      const questionContainer = document.getElementById("question-container");
-      const questionText = document.getElementById("question-text");
-      const optionsContainer = document.getElementById("options-container");
-      const resultMessage = document.getElementById("result-message");
-      const nextButton = document.getElementById("next-btn");
-      const streakDisplay = document.getElementById("streak");
-      const specialChallenge = document.getElementById("special-challenge");
-      const specialQuestion = document.getElementById("special-question");
-      const specialOptions = document.getElementById("special-options");
-      const powerUpsContainer = document.getElementById("power-ups");
-      const diceElement = document.getElementById("dice");
-      const rollButton = document.getElementById("roll-btn");
-      const diceRollResult = document.getElementById("dice-roll-result");
-
-      // Función para lanzar el dado
-      function rollDice() {
-        rollButton.disabled = true;
-        let rolls = 0;
-        const animationInterval = setInterval(() => {
-          diceElement.textContent = getRandomInt(1, 6);
-          rolls++;
-
-          if (rolls > 10) {
-            clearInterval(animationInterval);
-            lastDiceRoll = getRandomInt(1, 6);
-            diceElement.textContent = lastDiceRoll;
-            diceRollResult.textContent = `Resultado: ${lastDiceRoll}`;
-            diceRollResult.style.display = "block";
-            rollButton.disabled = false;
-            localStorage.setItem("lastDiceRoll", lastDiceRoll);
-          }
-        }, 100);
-      }
-
-      // Función para cargar una pregunta con manejo de errores
-      function loadQuestion() {
-        try {
-          resultMessage.style.display = "none";
-          nextButton.style.display = "none";
-          specialChallenge.style.display = "none";
-          questionText.style.display = "block";
-          optionsContainer.style.display = "grid";
-
-          if (streak >= 5 && streak % 5 === 0) {
-            showSpecialChallenge();
-            return;
-          }
-
-          const categories = Object.keys(questionGenerators).filter(
-            (c) => c !== "especial"
-          );
-          const effectiveCategory =
-            currentCategory === "aleatorio"
-              ? categories[getRandomInt(0, categories.length - 1)]
-              : currentCategory;
-
-          // Validar que la categoría existe
-          if (!questionGenerators[effectiveCategory]) {
-            currentCategory = "aleatorio";
-            return loadQuestion();
-          }
-
-          currentQuestion = questionGenerators[effectiveCategory]();
-
-          // Validar que la pregunta se generó correctamente
-          if (
-            !currentQuestion ||
-            !currentQuestion.question ||
-            !currentQuestion.options
-          ) {
-            return loadQuestion(); // Reintentar
-          }
-
-          showNormalQuestion();
-        } catch (error) {
-          console.error("Error al cargar pregunta:", error);
-          // Recargar la pregunta en caso de error
-          setTimeout(loadQuestion, 100);
+            
+            return Array.from(options).sort(() => Math.random() - 0.5);
         }
-      }
 
-      function showNormalQuestion() {
-        questionText.textContent = currentQuestion.question;
-        optionsContainer.innerHTML = "";
-
-        currentQuestion.options.forEach((option) => {
-          try {
-            const button = document.createElement("button");
-            button.className = "option-btn";
-            button.textContent = option;
-            button.addEventListener("click", () => checkAnswer(option, false));
-            optionsContainer.appendChild(button);
-          } catch (error) {
-            console.error("Error al crear opción:", error);
-          }
-        });
-      }
-
-      function showSpecialChallenge() {
-        try {
-          currentQuestion = questionGenerators.especial();
-          questionText.style.display = "none";
-          optionsContainer.style.display = "none";
-          specialChallenge.style.display = "block";
-          specialQuestion.textContent = currentQuestion.question;
-
-          specialOptions.innerHTML = "";
-          currentQuestion.options.forEach((option) => {
-            const button = document.createElement("button");
-            button.className = "option-btn";
-            button.textContent = option;
-            button.addEventListener("click", () => checkAnswer(option, true));
-            specialOptions.appendChild(button);
-          });
-        } catch (error) {
-          console.error("Error en desafío especial:", error);
-          loadQuestion(); // Volver a pregunta normal si hay error
-        }
-      }
-
-      function checkAnswer(selectedOption, isSpecial) {
-        try {
-          const optionButtons = isSpecial
-            ? document.querySelectorAll("#special-options .option-btn")
-            : document.querySelectorAll("#options-container .option-btn");
-
-          optionButtons.forEach((button) => (button.disabled = true));
-
-          resultMessage.style.display = "block";
-
-          if (selectedOption == currentQuestion.answer) {
-            resultMessage.textContent = "¡Correcto!";
-            resultMessage.className = "result correct";
-            streak++;
-
-            if (isSpecial) {
-              const ability = specialAbilities[currentQuestion.ability];
-              if (ability) {
-                earnedAbilities.push(ability);
-                resultMessage.textContent += ` ¡Has ganado ${ability.name}! (${ability.description})`;
-                updatePowerUpsDisplay();
-              }
+        // Habilidades especiales
+        const specialAbilities = {
+            caza: {
+                name: "Caza de Apoyo",
+                description: "Puedes mover 2 bombarderos en un mismo turno"
+            },
+            antiaereo: {
+                name: "Sistema Antiaéreo",
+                description: "Protege un bombardero de un ataque durante 2 turnos"
+            },
+            uav: {
+                name: "UAV de Reconocimiento",
+                description: "Aumenta tu alcance de ataque a 2 casillas de distancia"
             }
-          } else {
-            resultMessage.textContent = `Incorrecto. La respuesta correcta es: ${currentQuestion.answer}`;
-            resultMessage.className = "result incorrect";
-            streak = 0;
-          }
+        };
 
-          streakDisplay.textContent = streak;
-          nextButton.style.display = "block";
-        } catch (error) {
-          console.error("Error al verificar respuesta:", error);
-          resultMessage.style.display = "block";
-          resultMessage.textContent =
-            "Error al verificar respuesta. Intenta de nuevo.";
-          resultMessage.className = "result incorrect";
-          nextButton.style.display = "block";
+        // Banco de preguntas mejorado y verificado
+        const questionGenerators = {
+            pitagoras: () => {
+                const a = getRandomInt(3, 8);
+                const b = getRandomInt(3, 8);
+                const c = Math.sqrt(a*a + b*b);
+                const isDecimal = c % 1 !== 0;
+                const answer = isDecimal ? c.toFixed(2) : Math.round(c).toString();
+                
+                return {
+                    question: `En un triángulo rectángulo, si los catetos miden ${a} y ${b}, ¿cuánto mide la hipotenusa?`,
+                    options: generateOptions(c, isDecimal ? 2 : 1, isDecimal),
+                    answer: answer,
+                    category: "pitagoras"
+                };
+            },
+            
+            angulos: () => {
+                const angle1 = getRandomInt(30, 70);
+                const angle2 = getRandomInt(30, 70);
+                const angle3 = 180 - angle1 - angle2;
+                
+                // Asegurar que el ángulo no sea negativo
+                if (angle3 <= 0) return questionGenerators.angulos();
+                
+                return {
+                    question: `En un triángulo con ángulos de ${angle1}° y ${angle2}°, ¿cuánto mide el tercer ángulo?`,
+                    options: generateOptions(angle3, 10),
+                    answer: angle3.toString(),
+                    category: "angulos"
+                };
+            },
+            
+            trigonometria: () => {
+                const angles = [30, 45, 60]; // Ángulos notables
+                const angle = angles[getRandomInt(0, 2)];
+                const func = ["seno", "coseno", "tangente"][getRandomInt(0, 2)];
+                let answer, question;
+                
+                switch(func) {
+                    case "seno":
+                        answer = Math.sin(angle * Math.PI / 180);
+                        question = `¿Cuál es el seno de ${angle}°?`;
+                        break;
+                    case "coseno":
+                        answer = Math.cos(angle * Math.PI / 180);
+                        question = `¿Cuál es el coseno de ${angle}°?`;
+                        break;
+                    case "tangente":
+                        answer = Math.tan(angle * Math.PI / 180);
+                        question = `¿Cuál es la tangente de ${angle}°?`;
+                        break;
+                }
+                
+                answer = Math.round(answer * 100) / 100;
+                
+                return {
+                    question: question,
+                    options: generateOptions(answer, 1, true),
+                    answer: answer.toFixed(2),
+                    category: "trigonometria"
+                };
+            },
+            
+            clasificacion: () => {
+                const types = [
+                    { name: "Equilátero", sides: [5, 5, 5] },
+                    { name: "Isósceles", sides: [4, 4, 6] },
+                    { name: "Escaleno", sides: [3, 4, 5] },
+                    { name: "Rectángulo", sides: [3, 4, 5] }
+                ];
+                
+                const type = types[getRandomInt(0, 3)];
+                
+                return {
+                    question: `Un triángulo con lados ${type.sides.join(", ")} es:`,
+                    options: types.map(t => t.name),
+                    answer: type.name,
+                    category: "clasificacion"
+                };
+            },
+            
+            aplicaciones: () => {
+                const altura = getRandomInt(10, 30);
+                const distancia = getRandomInt(10, 30);
+                const angulo = Math.round(Math.atan(altura/distancia) * 180/Math.PI);
+                
+                return {
+                    question: `Un avión vuela a ${altura} km de altura. Un observador está a ${distancia} km del punto bajo el avión. ¿Ángulo de elevación?`,
+                    options: generateOptions(angulo, 5),
+                    answer: angulo.toString(),
+                    category: "aplicaciones"
+                };
+            },
+            
+            especial: () => {
+                const specialQuestions = [
+                    {
+                        question: "Un avión vuela a 1000m con ángulo de depresión de 30° a un objetivo. ¿Distancia horizontal? (√3 ≈ 1.732)",
+                        options: ["1732 m", "1000 m", "1500 m", "2000 m"],
+                        answer: "1732 m",
+                        ability: "uav"
+                    },
+                    {
+                        question: "Triángulo ABC: ángulo A=45°, lado b=8, lado c=6. ¿Lado a? (√2 ≈ 1.414)",
+                        options: ["5.32", "6.24", "7.15", "8.92"],
+                        answer: "5.32",
+                        ability: "antiaereo"
+                    }
+                ];
+                
+                return specialQuestions[getRandomInt(0, specialQuestions.length - 1)];
+            }
+        };
+
+        // Variables del juego
+        let currentCategory = '';
+        let currentQuestion = {};
+        let streak = 0;
+        let earnedAbilities = [];
+        let lastDiceRoll = 0;
+        let currentPowerUpMessage = '';
+        
+        // Elementos del DOM
+        const categoryButtons = document.querySelectorAll('.category-btn');
+        const questionContainer = document.getElementById('question-container');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const resultMessage = document.getElementById('result-message');
+        const nextButton = document.getElementById('next-btn');
+        const streakDisplay = document.getElementById('streak');
+        const specialChallenge = document.getElementById('special-challenge');
+        const specialQuestion = document.getElementById('special-question');
+        const specialOptions = document.getElementById('special-options');
+        const powerUpsContainer = document.getElementById('power-ups');
+        const diceElement = document.getElementById('dice');
+        const rollButton = document.getElementById('roll-btn');
+        const diceRollResult = document.getElementById('dice-roll-result');
+        
+        // Función para lanzar el dado
+        function rollDice() {
+            rollButton.disabled = true;
+            let rolls = 0;
+            const animationInterval = setInterval(() => {
+                diceElement.textContent = getRandomInt(1, 6);
+                rolls++;
+                
+                if (rolls > 10) {
+                    clearInterval(animationInterval);
+                    lastDiceRoll = getRandomInt(1, 6);
+                    diceElement.textContent = lastDiceRoll;
+                    diceRollResult.textContent = `Resultado: ${lastDiceRoll}`;
+                    diceRollResult.style.display = 'block';
+                    rollButton.disabled = false;
+                    localStorage.setItem('lastDiceRoll', lastDiceRoll);
+                }
+            }, 100);
         }
-      }
-
-      function updatePowerUpsDisplay() {
-        try {
-          powerUpsContainer.innerHTML = "";
-          earnedAbilities.forEach((ability) => {
-            const powerUp = document.createElement("div");
-            powerUp.className = "power-up";
-            powerUp.textContent = `${ability.name}: ${ability.description}`;
-            powerUpsContainer.appendChild(powerUp);
-          });
-        } catch (error) {
-          console.error("Error al actualizar habilidades:", error);
+        
+        // Función para cargar una pregunta
+        function loadQuestion() {
+            // Limpiar mensaje de power-up
+            currentPowerUpMessage = '';
+            resultMessage.style.display = 'none';
+            resultMessage.textContent = '';
+            nextButton.style.display = 'none';
+            specialChallenge.style.display = 'none';
+            questionText.style.display = 'block';
+            optionsContainer.style.display = 'grid';
+            
+            if (streak >= 5 && streak % 5 === 0) {
+                showSpecialChallenge();
+                return;
+            }
+            
+            const categories = Object.keys(questionGenerators).filter(c => c !== 'especial');
+            const effectiveCategory = currentCategory === 'aleatorio' 
+                ? categories[getRandomInt(0, categories.length - 1)]
+                : currentCategory;
+            
+            currentQuestion = questionGenerators[effectiveCategory]();
+            showNormalQuestion();
         }
-      }
-
-      // Event listeners con manejo de errores
-      function setupEventListeners() {
-        try {
-          categoryButtons.forEach((button) => {
-            button.addEventListener("click", function () {
-              currentCategory = this.getAttribute("data-category");
-              loadQuestion();
-              questionContainer.style.display = "block";
+        
+        function showNormalQuestion() {
+            questionText.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = '';
+            
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.addEventListener('click', () => checkAnswer(option, false));
+                optionsContainer.appendChild(button);
             });
-          });
-
-          nextButton.addEventListener("click", loadQuestion);
-          rollButton.addEventListener("click", rollDice);
-        } catch (error) {
-          console.error("Error al configurar eventos:", error);
-          // Reintentar después de un breve retraso
-          setTimeout(setupEventListeners, 100);
         }
-      }
-
-      // Inicialización
-      function initializeGame() {
-        try {
-          streakDisplay.textContent = "0";
-          if (localStorage.getItem("lastDiceRoll")) {
-            lastDiceRoll = parseInt(localStorage.getItem("lastDiceRoll"));
+        
+        function showSpecialChallenge() {
+            currentQuestion = questionGenerators.especial();
+            questionText.style.display = 'none';
+            optionsContainer.style.display = 'none';
+            specialChallenge.style.display = 'block';
+            specialQuestion.textContent = currentQuestion.question;
+            
+            specialOptions.innerHTML = '';
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.addEventListener('click', () => checkAnswer(option, true));
+                specialOptions.appendChild(button);
+            });
+        }
+        
+        function checkAnswer(selectedOption, isSpecial) {
+            const optionButtons = isSpecial 
+                ? document.querySelectorAll('#special-options .option-btn')
+                : document.querySelectorAll('#options-container .option-btn');
+                
+            optionButtons.forEach(button => button.disabled = true);
+            
+            resultMessage.style.display = 'block';
+            
+            if (selectedOption == currentQuestion.answer) {
+                resultMessage.textContent = '¡Correcto!';
+                resultMessage.className = 'result correct';
+                streak++;
+                
+                if (isSpecial) {
+                    const ability = specialAbilities[currentQuestion.ability];
+                    earnedAbilities.push(ability);
+                    currentPowerUpMessage = ` ¡Has ganado ${ability.name}! (${ability.description})`;
+                    updatePowerUpsDisplay();
+                }
+            } else {
+                resultMessage.textContent = `Incorrecto. La respuesta correcta es: ${currentQuestion.answer}`;
+                resultMessage.className = 'result incorrect';
+                streak = 0;
+            }
+            
+            // Mostrar mensaje de power-up si existe
+            if (currentPowerUpMessage) {
+                resultMessage.textContent += currentPowerUpMessage;
+            }
+            
+            streakDisplay.textContent = streak;
+            nextButton.style.display = 'block';
+        }
+        
+        function updatePowerUpsDisplay() {
+            powerUpsContainer.innerHTML = '';
+            earnedAbilities.forEach(ability => {
+                const powerUp = document.createElement('div');
+                powerUp.className = 'power-up';
+                powerUp.textContent = `${ability.name}: ${ability.description}`;
+                powerUpsContainer.appendChild(powerUp);
+            });
+        }
+        
+        // Event listeners
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                currentCategory = this.getAttribute('data-category');
+                loadQuestion();
+                questionContainer.style.display = 'block';
+            });
+        });
+        
+        nextButton.addEventListener('click', loadQuestion);
+        rollButton.addEventListener('click', rollDice);
+        
+        // Inicialización
+        streakDisplay.textContent = '0';
+        if (localStorage.getItem('lastDiceRoll')) {
+            lastDiceRoll = parseInt(localStorage.getItem('lastDiceRoll'));
             diceElement.textContent = lastDiceRoll;
             diceRollResult.textContent = `Resultado: ${lastDiceRoll}`;
-            diceRollResult.style.display = "block";
-          } else {
-            diceElement.textContent = "?";
-          }
-
-          setupEventListeners();
-        } catch (error) {
-          console.error("Error al inicializar el juego:", error);
-          setTimeout(initializeGame, 100);
+            diceRollResult.style.display = 'block';
+        } else {
+            diceElement.textContent = '?';
         }
-      }
-
-      // Iniciar el juego cuando el DOM esté listo
-      document.addEventListener("DOMContentLoaded", initializeGame);
     </script>
   </body>
 </html>
